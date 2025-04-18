@@ -1,0 +1,76 @@
+diff --git a/pkg/_fe_analyzer_shared/lib/src/util/colors.dart b/pkg/_fe_analyzer_shared/lib/src/util/colors.dart
+index fe4437e2..dc658b7b 100644
+--- a/pkg/_fe_analyzer_shared/lib/src/util/colors.dart
++++ b/pkg/_fe_analyzer_shared/lib/src/util/colors.dart
+@@ -141,7 +141,7 @@ bool _computeEnableColors() {
+   // The `-S` option of `tput` allows us to query multiple capabilities at
+   // once.
+   ProcessResult result = Process.runSync(
+-      "/bin/sh", ["-c", "printf '%s' '$TERMINAL_CAPABILITIES' | tput -S"]);
++      "/data/data/com.termux/files/usr/bin/sh", ["-c", "printf '%s' '$TERMINAL_CAPABILITIES' | tput -S"]);
+ 
+   if (result.exitCode != 0) {
+     printEnableColorsReason("Not enabling colors, running tput failed.");
+diff --git a/runtime/bin/directory_linux.cc b/runtime/bin/directory_linux.cc
+index ddfed623..c8e1ac0e 100644
+--- a/runtime/bin/directory_linux.cc
++++ b/runtime/bin/directory_linux.cc
+@@ -425,7 +425,7 @@ const char* Directory::SystemTemp(Namespace* namespc) {
+   }
+   if (temp_dir == nullptr) {
+ #if defined(DART_HOST_OS_ANDROID)
+-    temp_dir = "/data/local/tmp";
++    temp_dir = "/data/data/com.termux/files/usr/tmp";
+ #else
+     temp_dir = "/tmp";
+ #endif
+diff --git a/runtime/platform/globals.h b/runtime/platform/globals.h
+index 124b85be..4e513a6c 100644
+--- a/runtime/platform/globals.h
++++ b/runtime/platform/globals.h
+@@ -737,7 +737,9 @@ DART_FORCE_INLINE D bit_copy(const S& source) {
+ #define DART_ENABLE_HEAP_SNAPSHOT_WRITER 1
+ #endif
+ 
+-#if defined(DART_HOST_OS_ANDROID)
++#if defined(DART_HOST_OS_ANDROID) and defined(__TERMUX__)
++#define kHostOperatingSystemName "linux"
++#elif defined(DART_HOST_OS_ANDROID)
+ #define kHostOperatingSystemName "android"
+ #elif defined(DART_HOST_OS_FUCHSIA)
+ #define kHostOperatingSystemName "fuchsia"
+diff --git a/runtime/vm/os_android.cc b/runtime/vm/os_android.cc
+index b60658c4..aa0dcb8d 100644
+--- a/runtime/vm/os_android.cc
++++ b/runtime/vm/os_android.cc
+@@ -32,7 +32,7 @@ namespace dart {
+ 
+ DEFINE_FLAG(bool,
+             android_log_to_stderr,
+-            false,
++            true,
+             "Send Dart VM logs to stdout and stderr instead of the Android "
+             "system logs.");
+ 
+@@ -53,7 +53,7 @@ class PerfCodeObserver : public CodeObserver {
+       return;
+     }
+     intptr_t pid = getpid();
+-    char* filename = OS::SCreate(nullptr, "/tmp/perf-%" Pd ".map", pid);
++    char* filename = OS::SCreate(nullptr, "/data/data/com.termux/files/usr/tmp/perf-%" Pd ".map", pid);
+     out_file_ = (*file_open)(filename, true);
+     free(filename);
+   }
+diff --git a/sdk/lib/_internal/vm/bin/process_patch.dart b/sdk/lib/_internal/vm/bin/process_patch.dart
+index a43770f6..208b4894 100644
+--- a/sdk/lib/_internal/vm/bin/process_patch.dart
++++ b/sdk/lib/_internal/vm/bin/process_patch.dart
+@@ -331,7 +331,7 @@ base class _ProcessImpl extends _ProcessImplNativeWrapper implements _Process {
+     if (Platform.isWindows) {
+       return 'cmd.exe';
+     }
+-    return '/bin/sh';
++    return '/data/data/com.termux/files/usr/bin/sh';
+   }
+ 
+   static List<String> _getShellArguments(

@@ -23,9 +23,12 @@ def termux_arch(arch: str):
     raise ValueError(f'unknown arch: "{arch}"')
 
 
-def target_output(root: str, arch: str, mode: str):
+def target_output(root: str, arch: str, mode: str, opted: bool = True):
     root = os.path.abspath(os.path.expanduser(root))
-    dest = f'linux_{mode}_{arch}'
+    if opted:
+        dest = f'linux_{mode}_{arch}'
+    else:
+        dest = f'linux_{mode}_unopt_{arch}'
     return os.path.join(root, 'engine', 'src', 'out', dest)
 
 
