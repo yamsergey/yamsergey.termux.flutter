@@ -18,19 +18,17 @@ jobs:
     - name: install python requirements
       run: pip install -r requirements.txt
 
-    - name: build
-      run: python build.py
+    - name: build with pre-validation
+      run: |
+        echo "Starting Flutter build with BUILD.gn pre-validation..."
+        python build.py || echo "Build failed, continuing to validation..."
 
     - name: comprehensive BUILD.gn validation and fix
-      if: failure()
       run: |
-        echo "=== Comprehensive BUILD.gn debugging and fixing ==="
+        echo "=== Pre-build BUILD.gn validation and fix ==="
         
         if [ -f "flutter/engine/src/build/config/termux/BUILD.gn" ]; then
           echo "termux BUILD.gn EXISTS after patch application"
-          echo ""
-          echo "=== Complete file content ==="
-          cat -n flutter/engine/src/build/config/termux/BUILD.gn
           echo ""
           echo "=== File statistics ==="
           wc -l flutter/engine/src/build/config/termux/BUILD.gn
@@ -117,8 +115,14 @@ jobs:
             echo "Recreating BUILD.gn with guaranteed correct structure using script..."
             bash scripts/create_build_gn.sh
             
-            echo "=== Retrying build with corrected BUILD.gn ==="
-            python build.py
+            echo "=== Immediately retrying build with corrected BUILD.gn ==="
+            if python build.py; then
+              echo "✓ BUILD SUCCESS after BUILD.gn recreation!"
+              exit 0
+            else
+              echo "✗ Build still failed even with recreated BUILD.gn"
+              exit 1
+            fi
             
           else
             echo "BUILD.gn appears to have correct structure, but build failed for other reasons"
@@ -128,6 +132,9 @@ jobs:
         else
           echo "BUILD.gn does not exist, patches were not applied"
         fi
+
+    - name: build
+      run: python build.py
 
     - name: debug - check termux BUILD.gn after build failure
       if: failure()
