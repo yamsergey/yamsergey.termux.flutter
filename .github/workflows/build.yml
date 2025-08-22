@@ -29,6 +29,25 @@ jobs:
           echo "termux BUILD.gn does NOT exist before build"
         fi
 
+    - name: fix termux BUILD.gn if needed
+      run: |
+        echo "=== Checking if termux BUILD.gn needs fixing ==="
+        if [ -f "flutter/engine/src/build/config/termux/BUILD.gn" ]; then
+          LAST_CHAR=$(tail -c 1 flutter/engine/src/build/config/termux/BUILD.gn)
+          SECOND_LAST_CHAR=$(tail -c 2 flutter/engine/src/build/config/termux/BUILD.gn | head -c 1)
+          echo "Last char: '$LAST_CHAR' (hex: $(printf '%02x' "'$LAST_CHAR'"))"
+          echo "Second last char: '$SECOND_LAST_CHAR' (hex: $(printf '%02x' "'$SECOND_LAST_CHAR'"))"
+          
+          # Check if file ends with "}\n" but should end with "}\n}\n"
+          if [[ "$SECOND_LAST_CHAR" == "}" && "$LAST_CHAR" == $'\n' ]]; then
+            echo "=== FIXING: Adding missing closing brace for config('sdk') ==="
+            echo "}" >> flutter/engine/src/build/config/termux/BUILD.gn
+            echo "Fixed! BUILD.gn now has proper closing braces."
+          else
+            echo "BUILD.gn appears to have correct format already."
+          fi
+        fi
+
     - name: build
       run: python build.py
 
