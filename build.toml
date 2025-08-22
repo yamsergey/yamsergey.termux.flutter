@@ -1,5 +1,5 @@
 [flutter]
-tag = '3.29.2'
+tag = '3.35.1'
 repo = 'https://github.com/flutter/flutter'
 path = './flutter'
 
@@ -14,7 +14,7 @@ runtime = ['debug'] # debug, release, profile
 gclient = './.gclient'
 
 [patch.engine]
-file = './patches/engine.patch'
+file = './patches/engine-3.35.1.patch'
 path = '.'
 
 [patch.dart]
