@@ -18,7 +18,11 @@ jobs:
     - name: install python requirements
       run: pip install -r requirements.txt
 
+    - name: build
+      run: python build.py
+
     - name: comprehensive BUILD.gn validation and fix
+      if: failure()
       run: |
         echo "=== Comprehensive BUILD.gn debugging and fixing ==="
         
@@ -291,15 +295,17 @@ FINAL_EOF
             echo "=== Last 5 lines of recreated file ==="
             tail -5 flutter/engine/src/build/config/termux/BUILD.gn | cat -n
             
+            echo "=== Retrying build with corrected BUILD.gn ==="
+            python build.py
+            
           else
-            echo "BUILD.gn appears to have correct structure, proceeding with build"
+            echo "BUILD.gn appears to have correct structure, but build failed for other reasons"
+            echo "=== Last 5 lines of current BUILD.gn ==="
+            tail -5 flutter/engine/src/build/config/termux/BUILD.gn | cat -n
           fi
         else
-          echo "BUILD.gn does not exist, this should not happen at this point"
+          echo "BUILD.gn does not exist, patches were not applied"
         fi
-
-    - name: build
-      run: python build.py
 
     - name: debug - check termux BUILD.gn after build failure
       if: failure()
