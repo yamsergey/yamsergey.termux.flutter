@@ -18,8 +18,39 @@ jobs:
     - name: install python requirements
       run: pip install -r requirements.txt
 
+    - name: debug - check if termux BUILD.gn exists before build
+      run: |
+        echo "=== Checking if termux BUILD.gn exists before build ==="
+        if [ -f "flutter/engine/src/build/config/termux/BUILD.gn" ]; then
+          echo "termux BUILD.gn EXISTS before build"
+          echo "=== Content before build ==="
+          cat flutter/engine/src/build/config/termux/BUILD.gn
+        else
+          echo "termux BUILD.gn does NOT exist before build"
+        fi
+
     - name: build
       run: python build.py
+
+    - name: debug - check termux BUILD.gn after build failure
+      if: failure()
+      run: |
+        echo "=== Checking termux BUILD.gn after build failure ==="
+        if [ -f "flutter/engine/src/build/config/termux/BUILD.gn" ]; then
+          echo "=== termux BUILD.gn content after patch ==="
+          cat flutter/engine/src/build/config/termux/BUILD.gn
+          echo ""
+          echo "=== Line count ==="
+          wc -l flutter/engine/src/build/config/termux/BUILD.gn
+          echo ""
+          echo "=== Last 10 lines with line numbers ==="
+          tail -10 flutter/engine/src/build/config/termux/BUILD.gn | cat -n
+          echo ""
+          echo "=== Hex dump of last 50 bytes ==="
+          tail -c 50 flutter/engine/src/build/config/termux/BUILD.gn | hexdump -C
+        else
+          echo "termux BUILD.gn still does NOT exist after build failure"
+        fi
 
     - name: parse tag
       id: parser
