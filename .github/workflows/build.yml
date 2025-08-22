@@ -75,13 +75,21 @@ jobs:
             echo "ERROR: config('sdk') block not found!"
           fi
           
-          # Validate GN syntax
+          # Validate GN syntax and Android log library
           echo "=== Final validation ==="
           if tail -1 flutter/engine/src/build/config/termux/BUILD.gn | grep -q '^}$'; then
             echo "File ends with closing brace - looks good"
           else
             echo "WARNING: File does not end with closing brace"
             echo "Last line: '$(tail -1 flutter/engine/src/build/config/termux/BUILD.gn)'"
+          fi
+          
+          # Check for Android log library fix
+          if grep -q 'libs = \[ "log" \]' flutter/engine/src/build/config/termux/BUILD.gn; then
+            echo "✓ Android log library fix is present"
+          else
+            echo "✗ WARNING: Android log library fix is MISSING!"
+            echo "This will cause __android_log_write linking errors"
           fi
           
         else
@@ -96,10 +104,11 @@ jobs:
         
         # Check if we need to recreate the file due to persistent syntax errors
         if [ -f "flutter/engine/src/build/config/termux/BUILD.gn" ]; then
-          # Test the file by checking if it has proper structure
+          # Test the file by checking if it has proper structure AND Android log library
           if ! grep -q 'config("sdk")' flutter/engine/src/build/config/termux/BUILD.gn || \
-             [ $(grep -c '{' flutter/engine/src/build/config/termux/BUILD.gn) -ne $(grep -c '}' flutter/engine/src/build/config/termux/BUILD.gn) ]; then
-            echo "BUILD.gn appears to have structural issues, recreating from scratch..."
+             [ $(grep -c '{' flutter/engine/src/build/config/termux/BUILD.gn) -ne $(grep -c '}' flutter/engine/src/build/config/termux/BUILD.gn) ] || \
+             ! grep -q 'libs = \[ "log" \]' flutter/engine/src/build/config/termux/BUILD.gn; then
+            echo "BUILD.gn missing Android log library or has structural issues, recreating from scratch..."
             
             # Backup the problematic file
             cp flutter/engine/src/build/config/termux/BUILD.gn flutter/engine/src/build/config/termux/BUILD.gn.backup
