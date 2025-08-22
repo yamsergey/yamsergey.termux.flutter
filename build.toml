@@ -14,7 +14,7 @@ runtime = ['debug'] # debug, release, profile
 gclient = './.gclient'
 
 [patch.engine]
-file = './patches/engine-3.35.1.patch'
+file = './patches/engine.patch'
 path = '.'
 
 [patch.dart]

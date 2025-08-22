@@ -28,7 +28,7 @@ solutions = [
       {
         'name': 'patch engine',
         'pattern': '.',
-        'action': ['git', "apply", "../patches/engine-3.35.1.patch"],
+        'action': ['git', "apply", "../patches/engine.patch"],
       },
       {
         'name': 'patch dart',
