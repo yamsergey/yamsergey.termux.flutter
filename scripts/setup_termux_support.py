@@ -289,12 +289,22 @@ def modify_buildconfig_gn(engine_src_path):
         '"//build/config/termux:runtime_library",'
     )
     
-    # Add termux import after the existing imports section
+    # Add termux import and logic
     if 'import("//build/config/termux/termux.gni")' not in content:
-        # Find the right place to add the import - before the is_linux check
-        pattern = r'(if \(is_linux\) \{)'
-        replacement = 'import("//build/config/termux/termux.gni")\n\nif (is_termux) {\n  _native_compiler_configs += [ "//build/config/termux:sdk" ]\n} else if (is_linux) {'
-        content = re.sub(pattern, replacement, content)
+        # Add import near the top with other imports
+        import_pattern = r'(import\("//build/config/profiler.gni"\))'
+        if re.search(import_pattern, content):
+            replacement = r'\1\nimport("//build/config/termux/termux.gni")'
+            content = re.sub(import_pattern, replacement, content)
+        
+        # Add termux logic before is_linux check in _native_compiler_configs section
+        pattern = r'(if \(is_linux\) \{\s*_native_compiler_configs \+= \[ "//build/config/linux:sdk" \]\s*\})'
+        replacement = '''if (is_termux) {
+  _native_compiler_configs += [ "//build/config/termux:sdk" ]
+} else if (is_linux) {
+  _native_compiler_configs += [ "//build/config/linux:sdk" ]
+}'''
+        content = re.sub(pattern, replacement, content, flags=re.DOTALL)
     
     # Replace executable ldconfig
     content = content.replace(
