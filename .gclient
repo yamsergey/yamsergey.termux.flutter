@@ -24,22 +24,23 @@ solutions = [
       "download_windows_deps" : False,
       "download_fuchsia_deps" : False,
     },
+    # Patches are no longer needed - termux support is applied directly via setup_termux_support.py
     "custom_hooks" : [
-      {
-        'name': 'patch engine',
-        'pattern': '.',
-        'action': ['git', "apply", "../patches/engine.patch"],
-      },
-      {
-        'name': 'patch dart',
-        'pattern': '.',
-        'action': ['git', "-C", "engine/src/flutter/third_party/dart", "apply", "../../../../../../patches/dart.patch"],
-      },
-      {
-        'name': 'patch skia',
-        'pattern': '.',
-        'action': ['git', "-C", "engine/src/flutter/third_party/skia", "apply", "../../../../../../patches/skia.patch"],
-      },
+      # {
+      #   'name': 'patch engine',
+      #   'pattern': '.',
+      #   'action': ['git', "apply", "../patches/engine.patch"],
+      # },
+      # {
+      #   'name': 'patch dart',
+      #   'pattern': '.',
+      #   'action': ['git', "-C", "engine/src/flutter/third_party/dart", "apply", "../../../../../../patches/dart.patch"],
+      # },
+      # {
+      #   'name': 'patch skia',
+      #   'pattern': '.',
+      #   'action': ['git', "-C", "engine/src/flutter/third_party/skia", "apply", "../../../../../../patches/skia.patch"],
+      # },
     ]
   }
 ]

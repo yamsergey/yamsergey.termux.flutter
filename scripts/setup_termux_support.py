@@ -397,6 +397,27 @@ def modify_skia_features(engine_src_path):
     
     print(f"✓ Modified {skia_features_path}")
 
+def modify_dart_globals(engine_src_path):
+    """Modify Dart globals.h to prevent Android detection in Termux."""
+    dart_globals_path = engine_src_path / "flutter" / "third_party" / "dart" / "runtime" / "platform" / "globals.h"
+    
+    if not dart_globals_path.exists():
+        print(f"⚠️  Warning: {dart_globals_path} not found, skipping")
+        return
+    
+    with open(dart_globals_path, 'r') as f:
+        content = f.read()
+    
+    # Prevent Dart from detecting Android in Termux environment
+    pattern = r'#if defined\(__ANDROID__\)'
+    replacement = '#if defined(__ANDROID__) && !defined(__TERMUX__)'
+    content = content.replace(pattern, replacement)
+    
+    with open(dart_globals_path, 'w') as f:
+        f.write(content)
+    
+    print(f"✓ Modified {dart_globals_path}")
+
 def setup_termux_support(flutter_root):
     """Set up complete Termux support for Flutter engine."""
     flutter_path = Path(flutter_root)
@@ -418,10 +439,12 @@ def setup_termux_support(flutter_root):
     modify_sysroot_gni(engine_src_path)
     modify_testing_build_gn(engine_src_path)
     modify_skia_features(engine_src_path)
+    modify_dart_globals(engine_src_path)
     
     print("✅ Termux support setup completed!")
     print("✅ Android log library support included (libs = ['log'])")
     print("✅ Skia Android detection prevented for Termux")
+    print("✅ Dart Android detection prevented for Termux")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
