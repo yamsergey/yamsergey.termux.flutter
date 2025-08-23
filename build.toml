@@ -46,6 +46,7 @@ pkgs = [
   'libexpat',
   'libffi',
   'libglvnd',
+  'libglvnd-dev',
   'libgraphite',
   'libjpeg-turbo',
   'liblzma',
