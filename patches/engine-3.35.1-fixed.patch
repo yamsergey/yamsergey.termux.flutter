@@ -329,6 +329,3 @@ index 28a19c7..5c3992b 100644
    }
  
    metadata = {
-     entitlement_file_path = [ "flutter_tester" ]
-   }
- }

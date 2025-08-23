@@ -121,6 +121,13 @@ class Build:
         repo = git.Repo(path)
         repo.git.apply([file])
 
+    def setup_termux_support(self, *, root: str = None):
+        """Set up Termux support directly without patches."""
+        root = root or self.root
+        script_path = Path(__file__).parent / 'scripts' / 'setup_termux_support.py'
+        cmd = ['python3', str(script_path), str(root)]
+        subprocess.run(cmd, check=True, stdout=True, stderr=True)
+
     def configure(
         self,
         arch: str,
@@ -201,6 +208,9 @@ class Build:
         self.config()
         self.clone()
         self.sync()
+        
+        # Set up Termux support directly (replaces patch application)
+        self.setup_termux_support()
 
         for arch in self.arch:
             self.sysroot(arch=arch)
