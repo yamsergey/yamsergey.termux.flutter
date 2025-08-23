@@ -328,3 +328,18 @@ index 28a19c7..5c3992b 100644
    }
  
    metadata = {
+diff --git a/engine/src/flutter/shell/platform/embedder/BUILD.gn b/engine/src/flutter/shell/platform/embedder/BUILD.gn
+index 250344b..932461e 100644
+--- a/engine/src/flutter/shell/platform/embedder/BUILD.gn
++++ b/engine/src/flutter/shell/platform/embedder/BUILD.gn
+@@ -59,6 +59,10 @@
+   if (enable_vulkan) {
+     deps += [ "//flutter/vulkan" ]
+   }
++
++  if (is_termux) {
++    libs = [ "EGL", "GLESv2" ]
++  }
+ }
+ 
+ # This is the public embedder target.
