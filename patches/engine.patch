@@ -80,7 +80,7 @@ new file mode 100644
 index 0000000..8208b13
 --- /dev/null
 +++ b/engine/src/build/config/termux/BUILD.gn
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,180 @@
 +import("//build/config/termux/termux.gni")
 +import("//build/config/sysroot.gni")
 +import("//build/config/profiler.gni")
@@ -271,6 +271,7 @@ index 0000000..0d97976
 +  is_termux = false
 +  is_termux_host = false
 +}
++
 diff --git a/engine/src/build/toolchain/termux/BUILD.gn b/engine/src/build/toolchain/termux/BUILD.gn
 new file mode 100644
 index 0000000..564c582
