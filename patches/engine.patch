@@ -80,13 +80,15 @@ new file mode 100644
 index 0000000..8208b13
 --- /dev/null
 +++ b/engine/src/build/config/termux/BUILD.gn
-@@ -0,0 +1,178 @@
+@@ -0,0 +1,180 @@
 +import("//build/config/termux/termux.gni")
 +import("//build/config/sysroot.gni")
 +import("//build/config/profiler.gni")
 +
 +declare_args() {
 +  angle_build_all = false
++  angle_enable_commit_id = false
++  angle_has_astc_encoder = false
 +}
 +
 +config("compiler") {
