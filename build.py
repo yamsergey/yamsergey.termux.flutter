@@ -198,7 +198,7 @@ class Build:
             return self.release
 
     # TODO: check gclient and ninja existence
-    def __call__(self):
+    def __call__(self, jobs: int = None):
         self.config()
         self.clone()
         self.sync()
@@ -207,7 +207,7 @@ class Build:
             self.sysroot(arch=arch)
             for mode in self.mode:
                 self.configure(arch=arch, mode=mode)
-                self.build(arch=arch, mode=mode)
+                self.build(arch=arch, mode=mode, jobs=jobs)
             self.debuild(arch=arch, output=self.output(arch))
 
 

@@ -1,8 +1,8 @@
 diff --git a/engine/src/build/config/BUILDCONFIG.gn b/engine/src/build/config/BUILDCONFIG.gn
-index b74b2e2..b181c74 100644
+index 596fd4fef78..84ae714527c 100644
 --- a/engine/src/build/config/BUILDCONFIG.gn
 +++ b/engine/src/build/config/BUILDCONFIG.gn
-@@ -343,13 +343,13 @@ if (is_msan && !is_linux) {
+@@ -372,13 +372,13 @@ if (is_msan && !is_linux) {
  # duplication in each target below.
  _native_compiler_configs = [
    "//build/config:feature_flags",
@@ -16,12 +16,12 @@ index b74b2e2..b181c74 100644
 -  "//build/config/compiler:runtime_library",
 +  "//build/config/termux:runtime_library",
  ]
- 
+
  if (use_flutter_cxx) {
-@@ -377,7 +377,11 @@ if (is_posix) {
+@@ -406,7 +406,11 @@ if (is_posix) {
    ]
  }
- 
+
 -if (is_linux) {
 +import("//build/config/termux/termux.gni")
 +
@@ -31,7 +31,7 @@ index b74b2e2..b181c74 100644
    _native_compiler_configs += [ "//build/config/linux:sdk" ]
  } else if (is_mac) {
    _native_compiler_configs += [ "//build/config/mac:sdk" ]
-@@ -457,7 +461,7 @@ if (is_win) {
+@@ -486,7 +490,7 @@ if (is_win) {
      "//build/config/mac:mac_executable_flags",
    ]
  } else if (is_linux || is_android) {
@@ -40,10 +40,10 @@ index b74b2e2..b181c74 100644
    if (is_android) {
      _executable_configs += [ "//build/config/android:executable_config" ]
    }
-@@ -521,7 +525,10 @@ import("//build/toolchain/custom/custom.gni")
+@@ -550,7 +554,10 @@ import("//build/toolchain/custom/custom.gni")
  # shlib_toolchain is a Fuchsia-specific symbol and not used by Flutter.
  shlib_toolchain = false
- 
+
 -if (custom_toolchain != "") {
 +if (is_termux) {
 +  host_toolchain = "//build/toolchain/linux:clang_$host_cpu"
@@ -52,22 +52,131 @@ index b74b2e2..b181c74 100644
    assert(custom_sysroot != "")
    assert(custom_target_triple != "")
    host_toolchain = "//build/toolchain/linux:clang_$host_cpu"
-@@ -597,6 +604,9 @@ if (custom_toolchain != "") {
+@@ -629,6 +636,9 @@ if (custom_toolchain != "") {
  } else {
    assert(false, "Toolchain not set because of unknown platform.")
  }
 +if (is_termux_host) {
 +  host_toolchain = "//build/toolchain/termux:$host_cpu"
 +}
- 
+
  # Sets default dependencies for executable and shared_library targets.
  #
+diff --git a/engine/src/build/config/compiler/BUILD.gn b/engine/src/build/config/compiler/BUILD.gn
+index 50f1b60eab1..cd1d7bcca5f 100644
+--- a/engine/src/build/config/compiler/BUILD.gn
++++ b/engine/src/build/config/compiler/BUILD.gn
+@@ -19,6 +19,7 @@ import("//build/config/profiler.gni")
+ import("//build/config/sanitizers/sanitizers.gni")
+ import("//build/toolchain/ccache.gni")
+ import("//build/toolchain/clang.gni")
++import("//build/config/termux/termux.gni")
+ import("//build/toolchain/toolchain.gni")
+ import("//build/toolchain/wasm.gni")
+
+@@ -228,7 +229,7 @@ config("compiler") {
+     } else if (current_cpu == "x86") {
+       cflags += [ "-m32" ]
+       ldflags += [ "-m32" ]
+-      if (is_clang) {
++      if (is_clang && !is_termux) {
+         cflags += [
+           # Align the stack on 16-byte boundaries, http://crbug.com/418554.
+           "-mstack-alignment=16",
+@@ -271,7 +272,7 @@ config("compiler") {
+       ]
+     }
+   } else if (is_win) {
+-    if (is_clang) {
++    if (is_clang && !is_termux) {
+       if (current_cpu == "x86") {
+         cflags += [ "-m32" ]
+       } else if (current_cpu == "x64") {
+@@ -406,7 +407,7 @@ config("compiler") {
+
+   # Clang-specific compiler flags setup.
+   # ------------------------------------
+-  if (is_clang) {
++  if (is_clang && !is_termux) {
+     cflags += [ "-fcolor-diagnostics" ]
+   }
+
+@@ -514,7 +515,7 @@ config("cxx_version_default") {
+   # a newer version. Targets that have explicitly opted into the newer version
+   # must fix the errors they run into.
+
+-  if (is_clang) {
++  if (is_clang && !is_termux) {
+     extra_warning_flags_cc = [
+       # TODO(174665): Third-party dependency (Angle) needs to patched to work
+       # around this.
+@@ -714,7 +715,7 @@ if (is_win) {
+       "-Wno-nonportable-system-include-path",
+     ]
+   }
+-  if (is_clang) {
++  if (is_clang && !is_termux) {
+     default_warning_flags += [
+       # No support for #pragma optimize. https://crbug.com/505314#c13
+       "-Wno-ignored-pragma-optimize",
+@@ -767,21 +768,21 @@ if (is_win) {
+     "-Wno-psabi",
+   ]
+
+-  if (is_clang) {
++  if (is_clang) {
+     default_warning_flags += [
+       "-Wno-implicit-int-float-conversion",
+       "-Wno-deprecated-copy",
+     ]
+   }
+
+-  if (!is_android && is_clang) {
++  if (!is_android && is_clang && !is_termux) {
+     default_warning_flags += [
+       # Needed for nlohmann/json.
+       "-Wno-deprecated-literal-operator",
+     ]
+   }
+
+-  if (!is_wasm && is_clang) {
++  if (!is_wasm && is_clang && !is_termux) {
+     default_warning_flags += [
+       # Unqualified std::move is pretty common.
+       "-Wno-unqualified-std-cast-call",
+@@ -867,7 +868,7 @@ config("no_chromium_code") {
+     cflags += [ "-Wno-deprecated-non-prototype" ]
+   }
+
+-  if (is_clang) {
++  if (is_clang && !is_termux) {
+     cflags += [
+       "-Wno-newline-eof",
+       "-Wno-typedef-redefinition",
+@@ -902,7 +903,7 @@ config("enable_exceptions") {
+   if (is_win) {
+     cflags_cc = [ "/EHsc" ]
+     defines = [ "_HAS_EXCEPTIONS=1" ]
+-  } else if (is_clang) {
++  } else if (is_clang && !is_termux) {
+     cflags_cc = [ "-fexceptions" ]
+   }
+ }
+@@ -1143,7 +1144,7 @@ config("no_symbols") {
+ # To enable in a GN target, use:
+ #   configs += [ "//build/config/compiler:prevent_unsafe_narrowing" ]
+ config("prevent_unsafe_narrowing") {
+-  if (is_clang) {
++  if (is_clang && !is_termux) {
+     cflags = [
+       "-Wshorten-64-to-32",
+       "-Wimplicit-int-conversion",
 diff --git a/engine/src/build/config/sysroot.gni b/engine/src/build/config/sysroot.gni
-index 5f7e48a..0f9c2e3 100644
+index 12c8df99f44..5e87f79075c 100644
 --- a/engine/src/build/config/sysroot.gni
 +++ b/engine/src/build/config/sysroot.gni
 @@ -17,6 +17,8 @@ declare_args() {
- 
+
  if (current_toolchain == default_toolchain && target_sysroot != "") {
    sysroot = target_sysroot
 +} else if (is_termux && custom_sysroot != "") {
@@ -226,7 +335,7 @@ index 0000000..8208b13
 +      "-stdlib=libstdc++",
 +      "-Wl,--warn-shared-textrel"
 +    ]
-+    lib_dirs = [ "$custom_toolchain/lib/clang/19/lib/linux/" ]
++    lib_dirs = [ "$custom_toolchain/lib/clang/18/lib/linux/" ]
 +    include_dirs = [
 +      "//flutter/third_party/libcxx/include",
 +      "//flutter/third_party/libcxxabi/include",
@@ -322,7 +431,7 @@ index 0000000..564c582
 +  toolchain_cpu = "x86"
 +}
 diff --git a/engine/src/flutter/shell/testing/BUILD.gn b/engine/src/flutter/shell/testing/BUILD.gn
-index 28a19c7..5c3992b 100644
+index 28a19c75d1b..5c3992b31f8 100644
 --- a/engine/src/flutter/shell/testing/BUILD.gn
 +++ b/engine/src/flutter/shell/testing/BUILD.gn
 @@ -56,6 +56,10 @@ executable("testing") {
@@ -334,5 +443,56 @@ index 28a19c7..5c3992b 100644
 +      deps -= [ "//flutter/third_party/swiftshader/src/Vulkan:swiftshader_libvulkan_static" ]
 +    }
    }
- 
+
    metadata = {
+diff --git a/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn b/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn
+--- a/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn
++++ b/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn
+@@ -11,6 +11,7 @@ config("inja_public_config") {
+   if (is_clang) {
+     cflags_cc = [
+       "-Wno-unused-variable",
+       "-Wno-newline-eof",
++      "-Wno-deprecated-literal-operator",
+     ]
+   }
+
+diff --git a/engine/src/flutter/third_party/vulkan-deps/spirv-cross/src/gn/BUILD.gn b/engine/src/flutter/third_party/vulkan-deps/spirv-cross/src/gn/BUILD.gn
+--- a/engine/src/flutter/third_party/vulkan-deps/spirv-cross/src/gn/BUILD.gn
++++ b/engine/src/flutter/third_party/vulkan-deps/spirv-cross/src/gn/BUILD.gn
+@@ -63,6 +63,7 @@ source_set("spirv_cross_sources") {
+       "-Wno-newline-eof",
+       "-Wno-sign-compare",
+       "-Wno-unused-variable",
++      "-Wno-deprecated-this-capture",
+     ]
+   }
+ }
+diff --git a/engine/src/flutter/build/secondary/third_party/spirv_cross_flutter/BUILD.gn b/engine/src/flutter/build/secondary/third_party/spirv_cross_flutter/BUILD.gn
+--- a/engine/src/flutter/build/secondary/third_party/spirv_cross_flutter/BUILD.gn
++++ b/engine/src/flutter/build/secondary/third_party/spirv_cross_flutter/BUILD.gn
+@@ -13,5 +13,23 @@
+ source_set("spirv_cross_flutter") {
+   public_configs = [ ":spirv_cross_public" ]
+ 
++  if (!is_win) {
++    cflags = [ "-fno-exceptions" ]
++  }
++
++  if (is_clang) {
++    cflags_cc = [
++      "-Wno-extra-semi",
++      "-Wno-ignored-qualifiers",
++      "-Wno-implicit-fallthrough",
++      "-Wno-inconsistent-missing-override",
++      "-Wno-missing-field-initializers",
++      "-Wno-newline-eof",
++      "-Wno-sign-compare",
++      "-Wno-unused-variable",
++      "-Wno-deprecated-this-capture",
++    ]
++  }
++
+   sources = [
+     "$source_root/GLSL.std.450.h",
+

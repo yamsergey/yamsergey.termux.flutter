@@ -1,0 +1,11 @@
+# Exclude flutter source directory - let container clone fresh
+flutter/
+
+# Exclude sysroot - downloaded during build
+sysroot/
+
+# Exclude build artifacts
+*.deb
+
+# Git
+.git/
