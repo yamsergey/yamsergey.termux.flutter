@@ -170,6 +170,8 @@ class Build:
         root = root or self.root
         cmd = [
             'ninja', '-C', utils.target_output(root, arch, mode),
+            # keep going after a failure so one CI run reports every error
+            '-k', '0',
             'flutter',
             # disable zip_archives
             # 'flutter/build/archives:artifacts',

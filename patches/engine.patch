@@ -521,3 +521,22 @@ index e99b123..075dc48 100644
  // PangoLayout g_autoptr macro weren't added until 1.49.4. Add them manually.
  // https://gitlab.gnome.org/GNOME/pango/-/commit/0b84e14
  #if !PANGO_VERSION_CHECK(1, 49, 4)
+diff --git a/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc b/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc
+index df3a986..421ab63 100644
+--- a/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc
++++ b/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc
+@@ -2,11 +2,10 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-// Workaround missing C code compatibility in ATK header.
+-// Fixed in https://gitlab.gnome.org/GNOME/at-spi2-core/-/merge_requests/219
+-extern "C" {
++// Termux ships at-spi2-core >= 2.60, which already carries the ATK C++
++// linkage fix (at-spi2-core MR 219). The extern "C" workaround used upstream
++// breaks on glib >= 2.68 because glib-typeof.h includes <type_traits>.
+ #include <atk/atk.h>
+-}
+ 
+ #include "flutter/shell/platform/linux/fl_accessible_node.h"
+ #include "flutter/shell/platform/linux/fl_accessible_text_field.h"
