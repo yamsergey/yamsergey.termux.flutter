@@ -40,6 +40,11 @@ solutions = [
         'pattern': '.',
         'action': ['git', "-C", "engine/src/flutter/third_party/skia", "apply", "../../../../../../patches/skia.patch"],
       },
+      {
+        'name': 'patch perfetto',
+        'pattern': '.',
+        'action': ['git', "-C", "engine/src/flutter/third_party/dart/third_party/perfetto/src", "apply", "../../../../../../../../../patches/perfetto.patch"],
+      },
     ]
   }
 ]
