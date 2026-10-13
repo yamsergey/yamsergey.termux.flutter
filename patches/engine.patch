@@ -189,7 +189,7 @@ new file mode 100644
 index 0000000..8208b13
 --- /dev/null
 +++ b/engine/src/build/config/termux/BUILD.gn
-@@ -0,0 +1,181 @@
+@@ -0,0 +1,189 @@
 +import("//build/config/termux/termux.gni")
 +import("//build/config/sysroot.gni")
 +import("//build/config/profiler.gni")
@@ -357,18 +357,26 @@ index 0000000..8208b13
 +  }
 +}
 +
-+# TODO: limit to linux:sdk
++# Sysroot headers are added for every toolchain (host tools may need them),
++# but the aarch64 sysroot libraries and the Termux rpath must only reach the
++# Termux toolchain. Host (clang_x64) tools link against the runner's own libs.
 +config("sdk") {
 +  cflags = []
-+  ldflags = [ "-Wl,-rpath=/data/data/com.termux/files/usr/lib" ]
-+  lib_dirs = [ "$custom_toolchain/lib/clang/18/lib/linux/" ]
-+  if (defined(target_sysroot) && target_sysroot != "") {
-+    cflags += [ "--sysroot=" + target_sysroot ]
-+    ldflags += [ "--sysroot=" + target_sysroot ]
-+  }
++  ldflags = []
++  lib_dirs = []
 +  if (defined(custom_sysroot) && custom_sysroot != "") {
 +    cflags += [ "-idirafter$custom_sysroot/usr/include" ]
-+    lib_dirs += [ "$custom_sysroot/usr/lib" ]
++  }
++  if (current_toolchain == "//build/toolchain/termux:${current_cpu}") {
++    ldflags += [ "-Wl,-rpath=/data/data/com.termux/files/usr/lib" ]
++    lib_dirs += [ "$custom_toolchain/lib/clang/18/lib/linux/" ]
++    if (defined(target_sysroot) && target_sysroot != "") {
++      cflags += [ "--sysroot=" + target_sysroot ]
++      ldflags += [ "--sysroot=" + target_sysroot ]
++    }
++    if (defined(custom_sysroot) && custom_sysroot != "") {
++      lib_dirs += [ "$custom_sysroot/usr/lib" ]
++    }
 +  }
 +}
 diff --git a/engine/src/build/config/termux/termux.gni b/engine/src/build/config/termux/termux.gni
