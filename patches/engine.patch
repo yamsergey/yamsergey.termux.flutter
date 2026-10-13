@@ -189,7 +189,7 @@ new file mode 100644
 index 0000000..8208b13
 --- /dev/null
 +++ b/engine/src/build/config/termux/BUILD.gn
-@@ -0,0 +1,181 @@
+@@ -0,0 +1,189 @@
 +import("//build/config/termux/termux.gni")
 +import("//build/config/sysroot.gni")
 +import("//build/config/profiler.gni")
@@ -357,18 +357,26 @@ index 0000000..8208b13
 +  }
 +}
 +
-+# TODO: limit to linux:sdk
++# Sysroot headers are added for every toolchain (host tools may need them),
++# but the aarch64 sysroot libraries and the Termux rpath must only reach the
++# Termux toolchain. Host (clang_x64) tools link against the runner's own libs.
 +config("sdk") {
 +  cflags = []
-+  ldflags = [ "-Wl,-rpath=/data/data/com.termux/files/usr/lib" ]
-+  lib_dirs = [ "$custom_toolchain/lib/clang/18/lib/linux/" ]
-+  if (defined(target_sysroot) && target_sysroot != "") {
-+    cflags += [ "--sysroot=" + target_sysroot ]
-+    ldflags += [ "--sysroot=" + target_sysroot ]
-+  }
++  ldflags = []
++  lib_dirs = []
 +  if (defined(custom_sysroot) && custom_sysroot != "") {
 +    cflags += [ "-idirafter$custom_sysroot/usr/include" ]
-+    lib_dirs += [ "$custom_sysroot/usr/lib" ]
++  }
++  if (current_toolchain == "//build/toolchain/termux:${current_cpu}") {
++    ldflags += [ "-Wl,-rpath=/data/data/com.termux/files/usr/lib" ]
++    lib_dirs += [ "$custom_toolchain/lib/clang/18/lib/linux/" ]
++    if (defined(target_sysroot) && target_sysroot != "") {
++      cflags += [ "--sysroot=" + target_sysroot ]
++      ldflags += [ "--sysroot=" + target_sysroot ]
++    }
++    if (defined(custom_sysroot) && custom_sysroot != "") {
++      lib_dirs += [ "$custom_sysroot/usr/lib" ]
++    }
 +  }
 +}
 diff --git a/engine/src/build/config/termux/termux.gni b/engine/src/build/config/termux/termux.gni
@@ -431,19 +439,29 @@ index 0000000..564c582
 +  toolchain_cpu = "x86"
 +}
 diff --git a/engine/src/flutter/shell/testing/BUILD.gn b/engine/src/flutter/shell/testing/BUILD.gn
-index 28a19c75d1b..5c3992b31f8 100644
+index f97ae91..ba4e151 100644
 --- a/engine/src/flutter/shell/testing/BUILD.gn
 +++ b/engine/src/flutter/shell/testing/BUILD.gn
-@@ -56,6 +56,10 @@ executable("testing") {
-       "//flutter/impeller",
+@@ -63,6 +63,9 @@ template("tester") {
+         "shlwapi.lib",
+       ]
+     }
++    if (defined(invoker.libs)) {
++      libs += invoker.libs
++    }
+ 
+     deps = [
+       "$dart_src/runtime:libdart_jit",
+@@ -104,6 +107,10 @@ tester("flutter_tester") {
+       ":tester_gpu_configuration",
        "//flutter/third_party/swiftshader/src/Vulkan:swiftshader_libvulkan_static",
      ]
 +    if (is_termux) {
-+      libs += [ "vk_swiftshader" ]
++      libs = [ "vk_swiftshader" ]
 +      deps -= [ "//flutter/third_party/swiftshader/src/Vulkan:swiftshader_libvulkan_static" ]
 +    }
    }
-
+ 
    metadata = {
 diff --git a/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn b/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn
 --- a/engine/src/flutter/build/secondary/third_party/inja/BUILD.gn
@@ -496,3 +514,37 @@ diff --git a/engine/src/flutter/build/secondary/third_party/spirv_cross_flutter/
    sources = [
      "$source_root/GLSL.std.450.h",
 
+diff --git a/engine/src/flutter/shell/platform/linux/fl_accessible_text_field.cc b/engine/src/flutter/shell/platform/linux/fl_accessible_text_field.cc
+index e99b123..075dc48 100644
+--- a/engine/src/flutter/shell/platform/linux/fl_accessible_text_field.cc
++++ b/engine/src/flutter/shell/platform/linux/fl_accessible_text_field.cc
+@@ -6,7 +6,10 @@
+ #include "flutter/shell/platform/linux/public/flutter_linux/fl_standard_message_codec.h"
+ #include "flutter/shell/platform/linux/public/flutter_linux/fl_value.h"
+ 
++// PangoContext g_autoptr macro weren't added until 1.58.0. Add them manually.
++#if !PANGO_VERSION_CHECK(1, 58, 0)
+ G_DEFINE_AUTOPTR_CLEANUP_FUNC(PangoContext, g_object_unref)
++#endif
+ // PangoLayout g_autoptr macro weren't added until 1.49.4. Add them manually.
+ // https://gitlab.gnome.org/GNOME/pango/-/commit/0b84e14
+ #if !PANGO_VERSION_CHECK(1, 49, 4)
+diff --git a/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc b/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc
+index df3a986..421ab63 100644
+--- a/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc
++++ b/engine/src/flutter/shell/platform/linux/fl_view_accessible.cc
+@@ -2,11 +2,10 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-// Workaround missing C code compatibility in ATK header.
+-// Fixed in https://gitlab.gnome.org/GNOME/at-spi2-core/-/merge_requests/219
+-extern "C" {
++// Termux ships at-spi2-core >= 2.60, which already carries the ATK C++
++// linkage fix (at-spi2-core MR 219). The extern "C" workaround used upstream
++// breaks on glib >= 2.68 because glib-typeof.h includes <type_traits>.
+ #include <atk/atk.h>
+-}
+ 
+ #include "flutter/shell/platform/linux/fl_accessible_node.h"
+ #include "flutter/shell/platform/linux/fl_accessible_text_field.h"

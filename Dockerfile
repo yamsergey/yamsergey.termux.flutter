@@ -9,6 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install system dependencies (matching GitHub Actions workflow)
 RUN apt-get update && apt-get install -y \
     libfreetype-dev \
+    libfontconfig-dev \
     ninja-build \
     git \
     curl \
