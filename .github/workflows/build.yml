@@ -2,6 +2,11 @@ name: build
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish a GitHub release (false = upload the deb as a workflow artifact only)'
+        type: boolean
+        default: true
 jobs:
   Ubuntu:
     runs-on: ubuntu-latest
@@ -28,7 +33,16 @@ jobs:
         echo "TAG=$TAG" >> $GITHUB_OUTPUT
         echo "TITLE=Flutter $TAG" >> $GITHUB_OUTPUT
 
+    - name: upload artifact
+      if: ${{ !inputs.publish }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: flutter-${{ steps.parser.outputs.TAG }}-deb
+        path: '**/*.deb'
+        compression-level: 0
+
     - name: release
+      if: ${{ inputs.publish }}
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.parser.outputs.TAG }}
