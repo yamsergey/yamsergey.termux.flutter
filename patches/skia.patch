@@ -1,7 +1,7 @@
-diff --git a/include/private/base/SkFeatures.h b/include/private/base/SkFeatures.h
-index 2452386..efaaf46 100644
---- a/include/private/base/SkFeatures.h
-+++ b/include/private/base/SkFeatures.h
+diff --git a/include/private/SkFeatures.h b/include/private/SkFeatures.h
+index 9ea8063..cd549fd 100644
+--- a/include/private/SkFeatures.h
++++ b/include/private/SkFeatures.h
 @@ -17,7 +17,7 @@
  
      #if defined(_WIN32) || defined(__SYMBIAN32__)
@@ -9,5 +9,5 @@ index 2452386..efaaf46 100644
 -    #elif defined(ANDROID) || defined(__ANDROID__)
 +    #elif (defined(ANDROID) || defined(__ANDROID__)) && !defined(__TERMUX__)
          #define SK_BUILD_FOR_ANDROID
-     #elif defined(linux) || defined(__linux) || defined(__FreeBSD__) || \
-           defined(__OpenBSD__) || defined(__sun) || defined(__NetBSD__) || \
+     #elif defined(__EMSCRIPTEN__)
+         // WASM toolchains expose a Unix-like compilation environment, but it is

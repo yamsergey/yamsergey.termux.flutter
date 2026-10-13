@@ -32,7 +32,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.parser.outputs.TAG }}
-        name: ${{ steps.parse_toml.outputs.TITLE }}
+        name: ${{ steps.parser.outputs.TITLE }}
         files: '**/*.deb'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
